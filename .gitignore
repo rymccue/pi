@@ -1,0 +1,30 @@
+# Secrets and credentials
+auth.json
+auth.json.*
+*.key
+*.pem
+*.p12
+*.pfx
+.env
+.env.*
+
+# Session/history data
+sessions/
+*.jsonl
+
+# Runtime/cache/package artifacts
+bin/
+git/
+npm/
+node_modules/
+.cache/
+tmp/
+*.log
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
