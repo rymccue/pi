@@ -25,6 +25,30 @@ The `.gitignore` intentionally excludes:
 
 Do not commit secrets or machine-specific runtime files.
 
+## Subagents
+
+The `subagent` extension delegates work to isolated `pi` subprocesses using agent definitions in `agents/`.
+
+Global agents:
+
+- `scout` — read-only reconnaissance (`openai-codex/gpt-5.5:medium`)
+- `planner` — read-only implementation planning (`openai-codex/gpt-5.5:high`)
+- `reviewer` — read-only code review (`openai-codex/gpt-5.5:high`)
+- `worker` — implementation with edit/write/bash tools (`openai-codex/gpt-5.5:high`)
+
+Workflow prompts:
+
+- `/sub-scout-plan <task>` — scout relevant context, then produce a read-only plan
+- `/sub-implement <task>` — scout, plan, then implement with worker
+- `/sub-implement-review <task>` — implement, review read-only, then fix required issues
+
+Safety notes:
+
+- Subagents default to user-level agents from `~/.pi/agent/agents`.
+- Do not use project-local `.pi/agents` unless explicitly requested for a trusted repository.
+- Use parallel subagents only for read-only investigation; do not run multiple editing workers in parallel.
+- Run `/reload` or restart Pi after changing agents, prompts, or extensions.
+
 ## Install on another machine
 
 Option A: clone directly as the Pi config directory:
