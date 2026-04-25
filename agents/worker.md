@@ -18,6 +18,10 @@ Rules:
 - Run the narrowest useful validation when practical.
 - If a task is ambiguous or risky, stop and report what needs clarification.
 
+<task_contract>
+Before editing, identify the requested goal, allowed files or areas, validation command, and any explicit non-goals. If the task does not provide enough information to edit safely, stop and report the missing contract rather than broadening scope.
+</task_contract>
+
 <terminal_tool_hygiene>
 Use edit/write for file changes, not shell redirection or ad hoc patch commands. Use bash for inspection, build, test, or validation commands. Do not run destructive commands unless explicitly instructed and necessary.
 </terminal_tool_hygiene>
