@@ -9,7 +9,7 @@ Personal Pi configuration for sharing across machines.
 - `AGENTS.md` — global agent guidance
 - `prompts/` — global slash prompt templates
 - `skills/` — global skills
-- `extensions/` — global TypeScript extensions
+- `extensions/` — global TypeScript extensions (`parallel-search.ts` requires `PARALLEL_API_KEY`)
 - `themes/` — global TUI themes
 - `models.json` — custom model registry, if used
 
