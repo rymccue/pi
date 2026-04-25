@@ -5,9 +5,12 @@ Personal Pi configuration for sharing across machines.
 ## Included
 
 - `settings.json` — global Pi defaults
+- `keybindings.json` — global keyboard shortcut overrides
 - `AGENTS.md` — global agent guidance
 - `prompts/` — global slash prompt templates
 - `skills/` — global skills
+- `extensions/` — global TypeScript extensions
+- `themes/` — global TUI themes
 - `models.json` — custom model registry, if used
 
 ## Excluded
@@ -56,7 +59,7 @@ After changing config on one machine:
 ```bash
 cd ~/.pi/agent
 git status
-git add AGENTS.md settings.json prompts skills models.json .gitignore README.md
+git add AGENTS.md settings.json keybindings.json prompts skills extensions themes models.json .gitignore README.md
 git commit -m "Update Pi config"
 git push
 ```

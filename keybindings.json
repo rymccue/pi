@@ -1,0 +1,13 @@
+{
+  "app.session.new": "ctrl+shift+n",
+  "app.session.tree": "ctrl+shift+t",
+  "app.session.fork": "ctrl+shift+f",
+  "app.session.resume": "ctrl+shift+r",
+  "app.model.select": ["ctrl+l", "ctrl+shift+m"],
+  "app.model.cycleForward": ["ctrl+p", "ctrl+shift+down"],
+  "app.model.cycleBackward": ["shift+ctrl+p", "ctrl+shift+up"],
+  "app.thinking.cycle": ["shift+tab", "ctrl+shift+l"],
+  "app.tools.expand": ["ctrl+o", "ctrl+shift+o"],
+  "app.message.followUp": ["alt+enter", "ctrl+shift+enter"],
+  "tui.input.newLine": ["shift+enter", "ctrl+j"]
+}
