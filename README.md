@@ -9,6 +9,7 @@ Personal Pi configuration for sharing across machines.
 - `AGENTS.md` — global agent guidance
 - `prompts/` — global slash prompt templates
 - `skills/` — global skills
+- `agents/` — global subagent definitions used by the `subagent` extension
 - `extensions/` — global TypeScript extensions (`parallel-search.ts` requires `PARALLEL_API_KEY`)
 - `themes/` — global TUI themes
 - `models.json` — custom model registry, if used
@@ -59,7 +60,7 @@ After changing config on one machine:
 ```bash
 cd ~/.pi/agent
 git status
-git add AGENTS.md settings.json keybindings.json prompts skills extensions themes models.json .gitignore README.md
+git add AGENTS.md settings.json keybindings.json prompts skills agents extensions themes models.json .gitignore README.md
 git commit -m "Update Pi config"
 git push
 ```
