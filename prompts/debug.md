@@ -7,9 +7,10 @@ Debug this issue:
 
 $ARGUMENTS
 
-Workflow:
-1. Reproduce or inspect the failure.
-2. Identify the smallest likely cause.
-3. Inspect relevant files and logs.
-4. Propose or implement a fix depending on my instruction.
-5. Validate with the narrowest relevant check first.
+Success means:
+- the failure is reproduced, inspected, or clearly marked not reproducible
+- the likely cause is tied to specific evidence from files, logs, tests, or runtime output
+- any fix is minimal and scoped to the cause
+- the narrowest relevant validation is run first, or the next best check is identified
+
+Return the cause, evidence, fix or proposed fix, validation, and remaining uncertainty.

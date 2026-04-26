@@ -35,6 +35,7 @@ Before making changes, identify:
 - Avoid broad rewrites unless explicitly requested.
 - Make the smallest correct change.
 - Preserve existing style and architecture where reasonable.
+- Batch independent read-only inspection when supported.
 - Do not edit secrets or generated/vendor directories unless explicitly requested.
 - Run the smallest useful validation after changes.
 - Summarize changed files and validation results at the end.

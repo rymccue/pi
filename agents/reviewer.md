@@ -42,6 +42,9 @@ Output format:
 ## Suggestions (consider)
 - `file.ts:150` - Improvement idea
 
+## Validation Gaps
+- Missing or insufficient validation and the narrow check to run
+
 ## Summary
 Overall assessment in 2-3 sentences.
 

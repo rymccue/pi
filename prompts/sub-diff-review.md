@@ -1,5 +1,5 @@
 ---
-description: Subagent workflow: review current changes with a diff-focused reviewer
+description: "Subagent workflow: review current changes with a diff-focused reviewer"
 argument-hint: "[focus]"
 ---
 

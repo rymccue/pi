@@ -1,5 +1,5 @@
 ---
-description: Subagent workflow: implement with a worker, review read-only, then fix issues if needed
+description: "Subagent workflow: implement with a worker, review read-only, then fix issues if needed"
 argument-hint: "<task>"
 ---
 

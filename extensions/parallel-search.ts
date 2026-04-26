@@ -4,8 +4,9 @@ import { Type } from "typebox";
 type JsonObject = Record<string, unknown>;
 
 const API_BASE_URL = process.env.PARALLEL_API_BASE_URL ?? "https://api.parallel.ai/v1";
-const MAX_RESEARCH_POLL_MS = 30 * 60 * 1000;
-const RESEARCH_POLL_INTERVAL_MS = 10_000;
+const MAX_RESEARCH_POLL_MS = 60 * 60 * 1000;
+const RESEARCH_RESULT_TIMEOUT_SECONDS = 25;
+const RESEARCH_POLL_INTERVAL_MS = 1_000;
 
 const webSearchParams = Type.Object({
 	query: Type.String({ description: "Search query" }),
@@ -41,6 +42,12 @@ function requireParallelApiKey(): string {
 
 async function readErrorBody(response: Response): Promise<string> {
 	return response.text().catch(() => "unknown error");
+}
+
+function isStillActivePollResponse(status: number, body: string): boolean {
+	if (status === 202) return true;
+	if (status !== 408) return false;
+	return /run still active|still active|timeout/i.test(body);
 }
 
 function jsonText(value: unknown): string {
@@ -181,7 +188,9 @@ export default function parallelSearchExtension(pi: ExtensionAPI) {
 				body: JSON.stringify({
 					input: params.question,
 					processor,
-					output_schema: { mode: "text" },
+					task_spec: {
+						output_schema: { type: "text" },
+					},
 				}),
 				signal,
 			});
@@ -215,7 +224,7 @@ export default function parallelSearchExtension(pi: ExtensionAPI) {
 				});
 
 				try {
-					const pollResponse = await fetch(`${API_BASE_URL}/tasks/runs/${runId}/result?timeout=10`, {
+					const pollResponse = await fetch(`${API_BASE_URL}/tasks/runs/${runId}/result?timeout=${RESEARCH_RESULT_TIMEOUT_SECONDS}`, {
 						headers: { "x-api-key": apiKey },
 						signal,
 					});
@@ -234,18 +243,23 @@ export default function parallelSearchExtension(pi: ExtensionAPI) {
 							throw new Error(`Research run failed: ${jsonText(result)}`);
 						}
 						consecutiveErrors = 0;
-					} else if (pollResponse.status === 202) {
-						consecutiveErrors = 0;
 					} else {
-						consecutiveErrors++;
-						if (consecutiveErrors >= 3) {
-							throw new Error(
-								`Parallel research API polling failed after ${consecutiveErrors} attempts (${pollResponse.status}): ${await readErrorBody(pollResponse)}`,
-							);
+						const body = await readErrorBody(pollResponse);
+						if (isStillActivePollResponse(pollResponse.status, body)) {
+							consecutiveErrors = 0;
+						} else {
+							consecutiveErrors++;
+							if (consecutiveErrors >= 3) {
+								throw new Error(
+									`Parallel research API polling failed after ${consecutiveErrors} attempts (${pollResponse.status}): ${body}`,
+								);
+							}
 						}
 					}
 				} catch (error) {
 					if (signal?.aborted) throw new Error("Research cancelled");
+					if (error instanceof Error && error.message.startsWith("Research run failed:")) throw error;
+					if (error instanceof Error && error.message.startsWith("Parallel research API polling failed")) throw error;
 					consecutiveErrors++;
 					if (consecutiveErrors >= 3) throw error;
 				}

@@ -1,5 +1,5 @@
 ---
-description: Subagent workflow: scout, plan, then implement with a worker
+description: "Subagent workflow: scout, plan, then implement with a worker"
 argument-hint: "<task>"
 ---
 

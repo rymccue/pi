@@ -1,5 +1,5 @@
 ---
-description: Subagent workflow: scout relevant code, then produce a read-only implementation plan
+description: "Subagent workflow: scout relevant code, then produce a read-only implementation plan"
 argument-hint: "<task>"
 ---
 

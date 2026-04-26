@@ -7,9 +7,10 @@ Implement this task end-to-end:
 
 $ARGUMENTS
 
-Workflow:
-1. Read project instructions and relevant files.
-2. Make the smallest correct change.
-3. Add or update tests if appropriate.
-4. Run relevant checks.
-5. Summarize changed files and validation.
+Success means:
+- relevant project instructions and files were checked
+- the change is the smallest safe fix for the requested behavior
+- tests or validation were added or updated when they materially prove the change
+- the narrowest useful checks were run, or the reason they were not run is clear
+
+Return changed files, validation results, risks, and any follow-up needed.

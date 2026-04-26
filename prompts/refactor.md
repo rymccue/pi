@@ -12,8 +12,10 @@ Constraints:
 - keep public APIs compatible unless asked
 - add/update tests only where they prove behavior
 
-Workflow:
-1. Inspect current structure and callers.
-2. State the refactor strategy and risk points.
-3. If implementation is requested, edit incrementally and validate.
-4. Summarize changed files and verification.
+Success means:
+- current structure and callers were inspected
+- the strategy explains what changes and what stays behaviorally identical
+- implementation, if requested, is incremental and easy to review
+- validation covers the behavior most likely to regress
+
+Return changed files, verification, risks, and any follow-up needed.

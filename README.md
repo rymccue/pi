@@ -29,25 +29,57 @@ Do not commit secrets or machine-specific runtime files.
 
 The `subagent` extension delegates work to isolated `pi` subprocesses using agent definitions in `agents/`.
 
-Global agents:
+Primary agents:
 
-- `scout` — read-only reconnaissance (`openai-codex/gpt-5.5:medium`)
-- `planner` — read-only implementation planning (`openai-codex/gpt-5.5:high`)
-- `reviewer` — read-only code review (`openai-codex/gpt-5.5:high`)
-- `worker` — implementation with edit/write/bash tools (`openai-codex/gpt-5.5:high`)
+- `search` — locate files, symbols, call sites, tests, docs, and config (`openai-codex/gpt-5.5:low`)
+- `scout` — synthesize read-only codebase context for handoff (`openai-codex/gpt-5.5:low`)
+- `planner` — produce concrete implementation plans for non-trivial work (`openai-codex/gpt-5.5:high`)
+- `validator` — run no-edit focused checks and summarize failures (`openai-codex/gpt-5.5:medium`)
+- `reviewer` — review code/context for correctness, maintainability, risk, and missing validation (`openai-codex/gpt-5.5:high`)
+- `diff-reviewer` — review current git changes and worker output (`openai-codex/gpt-5.5:high`)
+- `prompt-reviewer` — review prompts, agents, skills, and workflow instructions (`openai-codex/gpt-5.5:high`)
+- `worker` — bounded implementation with bash/edit/write tools; the only editing subagent (`openai-codex/gpt-5.5:high`)
+
+Compatibility/fallback agents:
+
+- `code-reviewer` / `review` — read-only aliases for `reviewer`; do not maintain separate behavior
+- `default` — safe read-only fallback for accidental default-agent requests; prefer a specific agent
 
 Workflow prompts:
 
+- `/orchestrate <task>` — choose direct work, scout/plan, implementation, and review workflow for a task
+- `/search-code <query>` — run the fast search agent for ranked file/symbol discovery
 - `/sub-scout-plan <task>` — scout relevant context, then produce a read-only plan
 - `/sub-implement <task>` — scout, plan, then implement with worker
 - `/sub-implement-review <task>` — implement, review read-only, then fix required issues
+- `/sub-diff-review [focus]` — review current git changes with the diff-focused reviewer
+- `/sub-validate [scope]` — run the no-edit validator for focused checks
+- `/sub-prompt-review [scope]` — review prompts, agents, skills, or workflow instructions
+
+Utility prompts:
+
+- `/config-check [focus]` — validate this Pi config before committing or syncing
+- `/doctor [focus]` — diagnose current Pi session and personal config health
+- `/test [scope]` — find and run the narrowest useful validation
+- `/status [scope]` — summarize current project or task status
+
+Power-user extension commands:
+
+- `/usage` — user-facing usage dashboard for current session cost/token usage, including nested subagent usage; passive only, no agent guidance
+- `/checkpoint [label]` — label the current session tree point for resume/navigation
+- `/session-hygiene` — report whether the session should be named, labeled, compacted, or handed off
+- `/ctx` — show current context/token usage
+- `/tools readonly|safe|full|list` — switch active tool presets
+- `/compact-now [instructions]` — trigger compaction with optional instructions
+- `/commands [extension|prompt|skill]` — list available custom commands
 
 Safety notes:
 
 - Subagents default to user-level agents from `~/.pi/agent/agents`.
 - Do not use project-local `.pi/agents` unless explicitly requested for a trusted repository.
+- `search` is read-only but has tightly restricted bash for search/status/history inspection.
 - Use parallel subagents only for read-only investigation; do not run multiple editing workers in parallel.
-- Run `/reload` or restart Pi after changing agents, prompts, or extensions.
+- Run `/reload` or restart Pi after changing agents, prompts, skills, extensions, settings, models, themes, or keybindings.
 
 ## Install on another machine
 
@@ -77,6 +109,20 @@ pi
 
 or provide provider API keys via environment variables.
 
+Useful environment variables:
+
+- `PARALLEL_API_KEY` — required for `parallel-search.ts` tools: `web_search`, `web_extract`, and `research`
+- `OPENROUTER_API_KEY` — required for OpenRouter models configured in `models.json`
+
+After install, useful smoke checks inside Pi:
+
+```text
+/reload
+/commands
+/tools list
+/doctor
+```
+
 ## Updating
 
 After changing config on one machine:
@@ -84,6 +130,18 @@ After changing config on one machine:
 ```bash
 cd ~/.pi/agent
 git status
+```
+
+Inside Pi, run:
+
+```text
+/config-check
+```
+
+Then commit and push:
+
+```bash
+cd ~/.pi/agent
 git add AGENTS.md settings.json keybindings.json prompts skills agents extensions themes models.json .gitignore README.md
 git commit -m "Update Pi config"
 git push
