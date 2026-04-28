@@ -77,4 +77,4 @@ Subagent routing rule:
 
 - For important multi-step work, name the session with `/name <short label>`.
 - Use `/checkpoint <label>` at major milestones before risky edits, deploys, or large context shifts.
-- When sessions grow long, prefer `/handoff`, `/compact-now`, `/new`, or `/tree` instead of continuing indefinitely.
+- When sessions grow long, prefer `/smart-compact <phase/focus>` at phase boundaries; use `/handoff`, `/compact-now`, `/new`, or `/tree` when appropriate instead of continuing indefinitely.

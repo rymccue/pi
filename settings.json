@@ -16,8 +16,8 @@
   "transport": "auto",
   "compaction": {
     "enabled": true,
-    "reserveTokens": 16384,
-    "keepRecentTokens": 20000
+    "reserveTokens": 32768,
+    "keepRecentTokens": 60000
   },
   "branchSummary": {
     "reserveTokens": 16384,

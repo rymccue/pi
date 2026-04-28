@@ -70,7 +70,9 @@ Power-user extension commands:
 - `/session-hygiene` — report whether the session should be named, labeled, compacted, or handed off
 - `/ctx` — show current context/token usage
 - `/tools readonly|safe|full|list` — switch active tool presets
-- `/compact-now [instructions]` — trigger compaction with optional instructions
+- `/compact-now [instructions]` — trigger generic/manual compaction with optional instructions
+- `/smart-compact [focus]` — trigger high-quality phase-boundary compaction that preserves goal, working set, decisions, validation, file memory, blockers, and next actions
+- `/compaction-status` — show compaction count/source, latest metadata, context usage, and repeated-read heuristics
 - `/commands [extension|prompt|skill]` — list available custom commands
 
 Safety notes:
@@ -80,6 +82,7 @@ Safety notes:
 - `search` is read-only but has tightly restricted bash for search/status/history inspection.
 - Use parallel subagents only for read-only investigation; do not run multiple editing workers in parallel.
 - Run `/reload` or restart Pi after changing agents, prompts, skills, extensions, settings, models, themes, or keybindings.
+- Prefer `/smart-compact <phase/focus>` at task phase boundaries (after reconnaissance, planning, implementation, or validation) so compaction preserves operational state and reduces re-reading. Built-in `/compact [instructions]` and `/compact-now [instructions]` remain generic/manual fallbacks.
 
 ## Install on another machine
 

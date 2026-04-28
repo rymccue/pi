@@ -48,7 +48,7 @@ function maybeNudge(ctx: ExtensionContext) {
 		nudgedHandoff = true;
 		notify(
 			ctx,
-			"Long session checkpoint recommended. Consider /checkpoint <label>, /handoff, /compact-now, or /new before starting another major thread.",
+			"Long session checkpoint recommended. Consider /checkpoint <label>, /smart-compact <phase/focus>, /handoff, /compact-now, or /new before starting another major thread.",
 			"warning",
 		);
 	}
@@ -99,7 +99,7 @@ export default function sessionHygieneExtension(pi: ExtensionAPI) {
 				recommendations.push("Use /checkpoint <label> at major milestones.");
 			}
 			if (userMessages >= USER_MESSAGES_BEFORE_HANDOFF_NUDGE) {
-				recommendations.push("Consider /handoff, /compact-now, or /new before a new major thread.");
+				recommendations.push("Consider /smart-compact <phase/focus>, /handoff, /compact-now, or /new before a new major thread.");
 			}
 
 			notify(
