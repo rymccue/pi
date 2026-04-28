@@ -1,4 +1,4 @@
-import { complete } from "@mariozechner/pi-ai";
+import { completeSimple } from "@mariozechner/pi-ai";
 import type { AssistantMessage, ToolCall } from "@mariozechner/pi-ai";
 import type { ExtensionAPI, ExtensionContext, FileOperations, SessionEntry } from "@mariozechner/pi-coding-agent";
 import { convertToLlm, serializeConversation } from "@mariozechner/pi-coding-agent";
@@ -344,9 +344,13 @@ export default function smartCompaction(pi: ExtensionAPI) {
 
 		try {
 			notify(ctx, `Smart compaction: summarizing ${allMessages.length} messages (${preparation.tokensBefore.toLocaleString()} tokens)`, "info");
-			const response = await complete(
+			const response = await completeSimple(
 				model,
-				{ messages: [{ role: "user", content: [{ type: "text", text: prompt }], timestamp: Date.now() }] },
+				{
+					systemPrompt:
+						"You are Pi's smart compaction engine. Produce only the requested Session State Capsule markdown. Do not continue the conversation.",
+					messages: [{ role: "user", content: [{ type: "text", text: prompt }], timestamp: Date.now() }],
+				},
 				{ apiKey: auth.apiKey, headers: auth.headers, maxTokens, signal },
 			);
 
