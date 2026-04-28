@@ -85,43 +85,17 @@ function collectSessionUsage(ctx: ExtensionContext): SessionUsage {
 	return { main, subagents, totalCost: main.cost + subagents.cost, toolErrors };
 }
 
-function statusText(usage: SessionUsage, contextTokens?: number): string {
-	const ctxPart = contextTokens ? ` ctx:${formatTokens(contextTokens)}` : "";
-	const subPart = usage.subagents.cost > 0 ? ` sub:${formatCost(usage.subagents.cost)}` : "";
-	return `💸 ${formatCost(usage.totalCost)}${subPart}${ctxPart}`;
-}
-
 function notify(ctx: ExtensionContext, message: string, level: "info" | "success" | "warning" | "error" = "info") {
 	if (ctx.hasUI) ctx.ui.notify(message, level);
 	else console.log(message);
 }
 
-function updateUsageStatus(ctx: ExtensionContext) {
-	if (!ctx.hasUI) return;
-	const usage = collectSessionUsage(ctx);
-	const contextUsage = ctx.getContextUsage();
-	ctx.ui.setStatus("usage", statusText(usage, contextUsage?.tokens));
-}
-
 export default function usageGuardExtension(pi: ExtensionAPI) {
-	pi.on("session_start", async (_event, ctx) => {
-		updateUsageStatus(ctx);
-	});
-
-	pi.on("message_end", async (_event, ctx) => {
-		updateUsageStatus(ctx);
-	});
-
-	pi.on("agent_end", async (_event, ctx) => {
-		updateUsageStatus(ctx);
-	});
-
 	pi.registerCommand("usage", {
 		description: "Show current session usage, including nested subagent usage",
 		handler: async (_args, ctx) => {
 			const usage = collectSessionUsage(ctx);
 			const contextUsage = ctx.getContextUsage();
-			updateUsageStatus(ctx);
 			notify(
 				ctx,
 				[
