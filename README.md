@@ -13,12 +13,13 @@ Personal Pi configuration for sharing across machines.
 - `extensions/` — global TypeScript extensions (`parallel-search.ts` requires `PARALLEL_API_KEY`)
 - `themes/` — global TUI themes
 - `models.json` — custom model registry, if used
+- `bootstrap.sh` — safe one-command setup/update script for new machines
 
 ## Excluded
 
 The `.gitignore` intentionally excludes:
 
-- `auth.json` and auth backups
+- `auth.json`, auth backups, and local Codex subscription profiles
 - session JSONL/history files
 - runtime binaries and package artifacts
 - local caches and logs
@@ -75,6 +76,7 @@ Power-user extension commands:
 - `/smart-compact [focus]` — trigger high-quality phase-boundary compaction that preserves goal, working set, decisions, validation, file memory, blockers, and next actions
 - `/compaction-status` — show compaction count/source, latest metadata, context usage, and repeated-read heuristics
 - `/commands [extension|prompt|skill]` — list available custom commands
+- `/codex-subscription status|list|save <name>|use <name>|sync|remove <name>` — manage local OpenAI Codex subscription profiles; `/codex` is an alias
 
 Safety notes:
 
@@ -87,24 +89,39 @@ Safety notes:
 
 ## Install on another machine
 
-Option A: clone directly as the Pi config directory:
+Bootstrap with one command:
 
 ```bash
-mkdir -p ~/.pi
-mv ~/.pi/agent ~/.pi/agent.backup.$(date +%Y%m%d%H%M%S) 2>/dev/null || true
-git clone <YOUR_REMOTE_URL> ~/.pi/agent
+curl -fsSL https://raw.githubusercontent.com/rymccue/pi/main/bootstrap.sh | bash
 ```
 
-Option B: clone elsewhere and symlink:
+Safer inspect-first variant:
 
 ```bash
-git clone <YOUR_REMOTE_URL> ~/dotfiles/pi-agent
-mkdir -p ~/.pi
-mv ~/.pi/agent ~/.pi/agent.backup.$(date +%Y%m%d%H%M%S) 2>/dev/null || true
-ln -s ~/dotfiles/pi-agent ~/.pi/agent
+curl -fsSL https://raw.githubusercontent.com/rymccue/pi/main/bootstrap.sh -o /tmp/pi-bootstrap.sh
+less /tmp/pi-bootstrap.sh
+bash /tmp/pi-bootstrap.sh
 ```
 
-Then authenticate separately on each machine:
+The bootstrap script:
+
+- installs Pi with `npm install -g @mariozechner/pi-coding-agent` if `pi` is missing and `npm` is available
+- clones this repo into `~/.pi/agent`
+- updates an existing matching clone with `git pull --ff-only`
+- backs up a pre-existing non-matching `~/.pi/agent` to `~/.pi/agent.backup.<timestamp>`
+- leaves dirty matching clones untouched so local edits are not overwritten
+
+Optional overrides:
+
+```bash
+PI_BOOTSTRAP_INSTALL_PI=0 bash /tmp/pi-bootstrap.sh      # skip Pi npm install
+PI_BOOTSTRAP_UPDATE=0 bash /tmp/pi-bootstrap.sh          # skip git pull on existing clone
+PI_CODING_AGENT_DIR=/path/to/agent bash /tmp/pi-bootstrap.sh
+PI_CONFIG_REPO=https://github.com/rymccue/pi.git bash /tmp/pi-bootstrap.sh
+PI_CONFIG_BRANCH=main bash /tmp/pi-bootstrap.sh
+```
+
+Authenticate separately on each machine:
 
 ```bash
 pi
@@ -112,6 +129,18 @@ pi
 ```
 
 or provide provider API keys via environment variables.
+
+For multiple ChatGPT/Codex subscriptions on one machine:
+
+```text
+/login openai-codex
+/codex-subscription save personal
+/login openai-codex
+/codex-subscription save work
+/codex-subscription use personal
+```
+
+Codex subscription profiles are stored locally under `~/.pi/agent/codex-subscriptions/` and are intentionally ignored by git.
 
 Useful environment variables:
 
@@ -146,7 +175,7 @@ Then commit and push:
 
 ```bash
 cd ~/.pi/agent
-git add AGENTS.md settings.json keybindings.json prompts skills agents extensions themes models.json .gitignore README.md
+git add AGENTS.md settings.json keybindings.json prompts skills agents extensions themes models.json bootstrap.sh .gitignore README.md
 git commit -m "Update Pi config"
 git push
 ```

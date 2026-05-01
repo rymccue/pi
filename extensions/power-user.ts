@@ -5,7 +5,6 @@ const SAFE_TOOLS = ["read", "grep", "find", "ls", "bash"];
 
 const protectedPathPatterns: Array<{ label: string; pattern: RegExp }> = [
 	{ label: "pi auth", pattern: /(^|\/)\.pi\/agent\/auth\.json(\.|$)?/ },
-	{ label: "environment secrets", pattern: /(^|\/)\.env(\.|$)?/ },
 	{ label: "private keys", pattern: /(^|\/)(id_rsa|id_dsa|id_ecdsa|id_ed25519)(\.|$)?/ },
 	{ label: "git internals", pattern: /(^|\/)\.git(\/|$)/ },
 	{ label: "dependencies", pattern: /(^|\/)(node_modules|vendor)(\/|$)/ },

@@ -1,6 +1,7 @@
 # Secrets and credentials
 auth.json
 auth.json.*
+codex-subscriptions/
 *.key
 *.pem
 *.p12
