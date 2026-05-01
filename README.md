@@ -66,6 +66,7 @@ Utility prompts:
 Power-user extension commands:
 
 - `/usage` — user-facing usage dashboard for current session cost/token usage, including nested subagent usage; passive only, no agent guidance
+- `/goal [objective|pause|resume|continue|clear|status]` — set and manage a persistent thread goal with Codex-style auto-continuation and `get_goal`/`create_goal`/`update_goal` model tools
 - `/checkpoint [label]` — label the current session tree point for resume/navigation
 - `/session-hygiene` — report whether the session should be named, labeled, compacted, or handed off
 - `/ctx` — show current context/token usage
