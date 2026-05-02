@@ -1,4 +1,4 @@
-import { StringEnum } from "@mariozechner/pi-ai";
+import * as PiAI from "@mariozechner/pi-ai";
 import type { AgentMessage } from "@mariozechner/pi-agent-core";
 import type { AssistantMessage } from "@mariozechner/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
@@ -15,7 +15,16 @@ function readMaxAutoTurns(): number {
 	return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : Number.POSITIVE_INFINITY;
 }
 
+function readEnvMs(name: string, fallback: number): number {
+	const raw = process.env[name];
+	if (raw === undefined || raw.trim() === "") return fallback;
+	const parsed = Number(raw);
+	return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : fallback;
+}
+
 const DEFAULT_MAX_AUTO_TURNS = readMaxAutoTurns();
+const DEFAULT_CONTINUE_DELAY_MS = readEnvMs("PI_GOAL_CONTINUE_DELAY_MS", 250);
+const DEFAULT_POST_COMPACT_DELAY_MS = readEnvMs("PI_GOAL_POST_COMPACT_DELAY_MS", 1500);
 
 type GoalStatus = "active" | "paused" | "budget_limited" | "complete";
 
@@ -247,8 +256,22 @@ export default function goalExtension(pi: ExtensionAPI) {
 	let goal: GoalState | null = null;
 	let pendingContinuation = false;
 	let continuationInFlight = false;
+	let continuationTimer: ReturnType<typeof setTimeout> | undefined;
+	let schedulerEpoch = 0;
+	let activeSessionId: string | undefined;
+	let lastCompactionEndedAt = 0;
 	let currentTurnToolCalls = 0;
 	let completedGoalNeedsAccountingId: string | undefined;
+
+	function clearContinuationTimer() {
+		if (continuationTimer) clearTimeout(continuationTimer);
+		continuationTimer = undefined;
+	}
+
+	function invalidateScheduler() {
+		schedulerEpoch += 1;
+		clearContinuationTimer();
+	}
 
 	function updateStatus(ctx: ExtensionContext) {
 		if (!goal) {
@@ -288,6 +311,7 @@ export default function goalExtension(pi: ExtensionAPI) {
 		continuationInFlight = false;
 		currentTurnToolCalls = 0;
 		completedGoalNeedsAccountingId = undefined;
+		lastCompactionEndedAt = 0;
 		updateStatus(ctx);
 	}
 
@@ -350,6 +374,7 @@ export default function goalExtension(pi: ExtensionAPI) {
 			goal.continuationSuppressed = false;
 		} else {
 			goal.lastActiveAt = undefined;
+			clearContinuationTimer();
 		}
 		persist(ctx, reason);
 	}
@@ -363,6 +388,7 @@ export default function goalExtension(pi: ExtensionAPI) {
 		goal = null;
 		pendingContinuation = false;
 		continuationInFlight = false;
+		clearContinuationTimer();
 		completedGoalNeedsAccountingId = undefined;
 		persist(ctx, "clear");
 		notify(ctx, "Goal cleared", "success");
@@ -400,20 +426,70 @@ export default function goalExtension(pi: ExtensionAPI) {
 	}
 
 	function scheduleContinuation(ctx: ExtensionContext, reason: string) {
-		setTimeout(() => {
+		clearContinuationTimer();
+
+		const sessionId = ctx.sessionManager.getSessionId();
+		const epoch = schedulerEpoch;
+		const poll = () => {
 			try {
+				if (epoch !== schedulerEpoch) return;
+				if (activeSessionId !== sessionId) return;
+				if (ctx.sessionManager.getSessionId() !== sessionId) return;
+				if (!goal || goal.status !== "active") return;
+
+				const sinceCompaction = lastCompactionEndedAt ? Date.now() - lastCompactionEndedAt : Number.POSITIVE_INFINITY;
+				if (sinceCompaction < DEFAULT_POST_COMPACT_DELAY_MS) {
+					continuationTimer = setTimeout(poll, DEFAULT_CONTINUE_DELAY_MS);
+					return;
+				}
+
+				continuationTimer = undefined;
 				maybeStartContinuation(ctx, reason);
 			} catch (error) {
+				continuationTimer = undefined;
 				console.error(`Goal continuation scheduling failed: ${error instanceof Error ? error.message : String(error)}`);
 			}
-		}, 0);
+		};
+
+		continuationTimer = setTimeout(poll, DEFAULT_CONTINUE_DELAY_MS);
 	}
 
-	pi.on("session_start", async (_event, ctx) => restore(ctx));
-	pi.on("session_tree", async (_event, ctx) => restore(ctx));
+	pi.on("session_start", async (_event, ctx) => {
+		invalidateScheduler();
+		activeSessionId = ctx.sessionManager.getSessionId();
+		restore(ctx);
+	});
+
+	pi.on("session_tree", async (_event, ctx) => {
+		invalidateScheduler();
+		activeSessionId = ctx.sessionManager.getSessionId();
+		restore(ctx);
+	});
+
+	pi.on("session_shutdown", async () => {
+		invalidateScheduler();
+		activeSessionId = undefined;
+	});
+
+	pi.on("session_compact", async (_event, ctx) => {
+		lastCompactionEndedAt = Date.now();
+		clearContinuationTimer();
+
+		const closeCodexWebSocketSessions = (PiAI as unknown as Record<string, unknown>).closeOpenAICodexWebSocketSessions;
+		if (typeof closeCodexWebSocketSessions === "function") {
+			try {
+				closeCodexWebSocketSessions(ctx.sessionManager.getSessionId());
+			} catch (error) {
+				console.error(`Goal compaction Codex WebSocket reset failed: ${error instanceof Error ? error.message : String(error)}`);
+			}
+		}
+
+		if (goal?.status === "active") scheduleContinuation(ctx, "post-compact");
+	});
 
 	pi.on("input", async (event, ctx) => {
 		if (event.source === "extension") return;
+		clearContinuationTimer();
 		if (goal?.status === "active" && goal.continuationSuppressed) {
 			goal.continuationSuppressed = false;
 			persist(ctx, "user-input-reset-suppression");
@@ -606,7 +682,7 @@ export default function goalExtension(pi: ExtensionAPI) {
 		],
 		parameters: Type.Object(
 			{
-				status: StringEnum(["complete"] as const, { description: "Set to complete only when the objective is achieved and no required work remains." }),
+				status: PiAI.StringEnum(["complete"] as const, { description: "Set to complete only when the objective is achieved and no required work remains." }),
 			},
 			{ additionalProperties: false },
 		),
